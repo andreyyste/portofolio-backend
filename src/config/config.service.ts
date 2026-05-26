@@ -5,6 +5,11 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ConfigService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Fetches a configuration by key and parses its JSON string value.
+   * Throws a NotFoundException if the key does not exist.
+   * Why: Configs are stored as JSON strings to allow flexible schemaless data for various site settings.
+   */
   async getConfig(key: string) {
     const config = await this.prisma.siteConfig.findUnique({
       where: { key },
@@ -17,7 +22,11 @@ export class ConfigService {
     return JSON.parse(config.value);
   }
 
-  async updateConfig(key: string, value: any) {
+  /**
+   * Upserts (creates or updates) a configuration key with the provided JSON object.
+   * We stringify the payload before storing it in the database.
+   */
+  async updateConfig(key: string, value: Record<string, any>) {
     const config = await this.prisma.siteConfig.upsert({
       where: { key },
       update: { value: JSON.stringify(value) },

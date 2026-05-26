@@ -1,15 +1,40 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
+import {
+  CreateProjectDto,
+  UpdateProjectDto,
+  CreateExperienceDto,
+  UpdateExperienceDto,
+  CreateSkillDto,
+  UpdateSkillDto,
+} from './dto/portfolio.dto';
 
 @Injectable()
 export class PortfolioService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Helper method to handle common Prisma errors (like record not found).
+   * @param error - The error thrown by Prisma
+   * @param resourceName - Name of the resource being operated on
+   */
+  private handlePrismaError(error: any, resourceName: string) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      // P2025: "An operation failed because it depends on one or more records that were required but not found."
+      if (error.code === 'P2025') {
+        throw new NotFoundException(`${resourceName} not found`);
+      }
+    }
+    throw error;
+  }
+
   // ---- PROJECTS ----
   async getProjects() {
     return this.prisma.project.findMany({ include: { tags: true } });
   }
-  async createProject(data: any) {
+
+  async createProject(data: CreateProjectDto) {
     const { tags, ...rest } = data;
     return this.prisma.project.create({
       data: {
@@ -19,30 +44,45 @@ export class PortfolioService {
       include: { tags: true },
     });
   }
-  async updateProject(id: number, data: any) {
-    const { tags, ...rest } = data;
-    // We do a simple approach: if tags are provided, delete old ones and recreate
-    if (tags) {
-      await this.prisma.projectTag.deleteMany({ where: { projectId: id } });
+
+  /**
+   * Updates a project.
+   * If `tags` are provided, we use a destructive approach (delete all existing tags and recreate them).
+   * Why: This avoids complex array diffing logic for a simple many-to-many relation, ensuring the DB matches the request payload exactly.
+   */
+  async updateProject(id: number, data: UpdateProjectDto) {
+    try {
+      const { tags, ...rest } = data;
+      if (tags) {
+        await this.prisma.projectTag.deleteMany({ where: { projectId: id } });
+      }
+      return await this.prisma.project.update({
+        where: { id },
+        data: {
+          ...rest,
+          ...(tags ? { tags: { create: tags.map((t: string) => ({ name: t })) } } : {}),
+        },
+        include: { tags: true },
+      });
+    } catch (error) {
+      this.handlePrismaError(error, 'Project');
     }
-    return this.prisma.project.update({
-      where: { id },
-      data: {
-        ...rest,
-        ...(tags ? { tags: { create: tags.map((t: string) => ({ name: t })) } } : {}),
-      },
-      include: { tags: true },
-    });
   }
+
   async deleteProject(id: number) {
-    return this.prisma.project.delete({ where: { id } });
+    try {
+      return await this.prisma.project.delete({ where: { id } });
+    } catch (error) {
+      this.handlePrismaError(error, 'Project');
+    }
   }
 
   // ---- EXPERIENCES ----
   async getExperiences() {
     return this.prisma.experience.findMany({ include: { skills: true } });
   }
-  async createExperience(data: any) {
+
+  async createExperience(data: CreateExperienceDto) {
     const { skills, ...rest } = data;
     return this.prisma.experience.create({
       data: {
@@ -52,35 +92,66 @@ export class PortfolioService {
       include: { skills: true },
     });
   }
-  async updateExperience(id: number, data: any) {
-    const { skills, ...rest } = data;
-    if (skills) {
-      await this.prisma.experienceSkill.deleteMany({ where: { experienceId: id } });
+
+  /**
+   * Updates an experience.
+   * If `skills` are provided, we use a destructive approach (delete all existing skills and recreate them).
+   * Why: This avoids complex array diffing logic for a simple many-to-many relation, ensuring the DB matches the request payload exactly.
+   */
+  async updateExperience(id: number, data: UpdateExperienceDto) {
+    try {
+      const { skills, ...rest } = data;
+      if (skills) {
+        await this.prisma.experienceSkill.deleteMany({ where: { experienceId: id } });
+      }
+      return await this.prisma.experience.update({
+        where: { id },
+        data: {
+          ...rest,
+          ...(skills ? { skills: { create: skills.map((s: string) => ({ name: s })) } } : {}),
+        },
+        include: { skills: true },
+      });
+    } catch (error) {
+      this.handlePrismaError(error, 'Experience');
     }
-    return this.prisma.experience.update({
-      where: { id },
-      data: {
-        ...rest,
-        ...(skills ? { skills: { create: skills.map((s: string) => ({ name: s })) } } : {}),
-      },
-      include: { skills: true },
-    });
   }
+
   async deleteExperience(id: number) {
-    return this.prisma.experience.delete({ where: { id } });
+    try {
+      return await this.prisma.experience.delete({ where: { id } });
+    } catch (error) {
+      this.handlePrismaError(error, 'Experience');
+    }
   }
 
   // ---- SKILLS ----
   async getSkills() {
     return this.prisma.skill.findMany();
   }
-  async createSkill(data: any) {
-    return this.prisma.skill.create({ data });
+
+  async createSkill(data: CreateSkillDto) {
+    return this.prisma.skill.create({ 
+      data: {
+        ...data,
+        mt: data.mt ?? '', // Provide default as it's required in schema but optional in DTO
+      } 
+    });
   }
-  async updateSkill(id: number, data: any) {
-    return this.prisma.skill.update({ where: { id }, data });
+
+  async updateSkill(id: number, data: UpdateSkillDto) {
+    try {
+      return await this.prisma.skill.update({ where: { id }, data });
+    } catch (error) {
+      this.handlePrismaError(error, 'Skill');
+    }
   }
+
   async deleteSkill(id: number) {
-    return this.prisma.skill.delete({ where: { id } });
+    try {
+      return await this.prisma.skill.delete({ where: { id } });
+    } catch (error) {
+      this.handlePrismaError(error, 'Skill');
+    }
   }
 }

@@ -10,6 +10,11 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  /**
+   * Verifies user credentials and generates a JWT.
+   * Uses Argon2 for secure password verification.
+   * Throws an UnauthorizedException if the user is not found or the password does not match.
+   */
   async login(email: string, pass: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
