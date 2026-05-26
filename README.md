@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>CREATIVE.RAW — Portfolio Backend</h1>
+  <h1> Portfolio Backend </h1>
   <p><i>The robust, neo-brutalist engine powering dynamic portfolio content.</i></p>
   
   [![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
@@ -55,7 +55,7 @@ Ensure you have [Node.js](https://nodejs.org/) installed on your machine.
 Clone the repository and install the necessary dependencies:
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/andreyyste/portofolio-backend
 cd portofolio-backend
 npm install
 ```
