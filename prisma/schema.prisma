@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String
+}
+
+model SiteConfig {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String // Stores JSON stringified data
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id          Int          @id @default(autoincrement())
+  title       String
+  brief       String
+  description String
+  link        String
+  imageSrc    String
+  imageAlt    String
+  tags        ProjectTag[]
+}
+
+model ProjectTag {
+  id        Int     @id @default(autoincrement())
+  name      String
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Experience {
+  id          Int               @id @default(autoincrement())
+  role        String
+  company     String
+  period      String
+  description String
+  skills      ExperienceSkill[]
+}
+
+model ExperienceSkill {
+  id           Int        @id @default(autoincrement())
+  name         String
+  experienceId Int
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+}
+
+model Skill {
+  id     Int    @id @default(autoincrement())
+  name   String
+  color  String
+  text   String
+  delay  String
+  dur    String
+  rotate String
+  mt     String
+}
