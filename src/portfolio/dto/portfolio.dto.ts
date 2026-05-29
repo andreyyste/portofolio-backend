@@ -18,6 +18,10 @@ export class CreateProjectDto {
   link!: string;
 
   @IsString()
+  @IsOptional()
+  githubLink?: string;
+
+  @IsString()
   @IsNotEmpty()
   imageSrc!: string;
 
@@ -47,6 +51,10 @@ export class UpdateProjectDto {
   @IsString()
   @IsOptional()
   link?: string;
+
+  @IsString()
+  @IsOptional()
+  githubLink?: string;
 
   @IsString()
   @IsOptional()

@@ -30,6 +30,7 @@ model Project {
   brief       String
   description String
   link        String
+  githubLink  String?
   imageSrc    String
   imageAlt    String
   tags        ProjectTag[]
