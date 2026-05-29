@@ -19,7 +19,7 @@ export class PortfolioService {
    * @param error - The error thrown by Prisma
    * @param resourceName - Name of the resource being operated on
    */
-  private handlePrismaError(error: any, resourceName: string) {
+  private handlePrismaError(error: unknown, resourceName: string) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       // P2025: "An operation failed because it depends on one or more records that were required but not found."
       if (error.code === 'P2025') {
@@ -39,7 +39,9 @@ export class PortfolioService {
     return this.prisma.project.create({
       data: {
         ...rest,
-        tags: tags ? { create: tags.map((t: string) => ({ name: t })) } : undefined,
+        tags: tags
+          ? { create: tags.map((t: string) => ({ name: t })) }
+          : undefined,
       },
       include: { tags: true },
     });
@@ -53,16 +55,20 @@ export class PortfolioService {
   async updateProject(id: number, data: UpdateProjectDto) {
     try {
       const { tags, ...rest } = data;
-      if (tags) {
-        await this.prisma.projectTag.deleteMany({ where: { projectId: id } });
-      }
-      return await this.prisma.project.update({
-        where: { id },
-        data: {
-          ...rest,
-          ...(tags ? { tags: { create: tags.map((t: string) => ({ name: t })) } } : {}),
-        },
-        include: { tags: true },
+      return await this.prisma.$transaction(async (tx) => {
+        if (tags) {
+          await tx.projectTag.deleteMany({ where: { projectId: id } });
+        }
+        return await tx.project.update({
+          where: { id },
+          data: {
+            ...rest,
+            ...(tags
+              ? { tags: { create: tags.map((t: string) => ({ name: t })) } }
+              : {}),
+          },
+          include: { tags: true },
+        });
       });
     } catch (error) {
       this.handlePrismaError(error, 'Project');
@@ -87,7 +93,9 @@ export class PortfolioService {
     return this.prisma.experience.create({
       data: {
         ...rest,
-        skills: skills ? { create: skills.map((s: string) => ({ name: s })) } : undefined,
+        skills: skills
+          ? { create: skills.map((s: string) => ({ name: s })) }
+          : undefined,
       },
       include: { skills: true },
     });
@@ -101,16 +109,20 @@ export class PortfolioService {
   async updateExperience(id: number, data: UpdateExperienceDto) {
     try {
       const { skills, ...rest } = data;
-      if (skills) {
-        await this.prisma.experienceSkill.deleteMany({ where: { experienceId: id } });
-      }
-      return await this.prisma.experience.update({
-        where: { id },
-        data: {
-          ...rest,
-          ...(skills ? { skills: { create: skills.map((s: string) => ({ name: s })) } } : {}),
-        },
-        include: { skills: true },
+      return await this.prisma.$transaction(async (tx) => {
+        if (skills) {
+          await tx.experienceSkill.deleteMany({ where: { experienceId: id } });
+        }
+        return await tx.experience.update({
+          where: { id },
+          data: {
+            ...rest,
+            ...(skills
+              ? { skills: { create: skills.map((s: string) => ({ name: s })) } }
+              : {}),
+          },
+          include: { skills: true },
+        });
       });
     } catch (error) {
       this.handlePrismaError(error, 'Experience');
@@ -131,11 +143,11 @@ export class PortfolioService {
   }
 
   async createSkill(data: CreateSkillDto) {
-    return this.prisma.skill.create({ 
+    return this.prisma.skill.create({
       data: {
         ...data,
         mt: data.mt ?? '', // Provide default as it's required in schema but optional in DTO
-      } 
+      },
     });
   }
 
