@@ -7,12 +7,21 @@ async function main() {
   console.log('Seeding database...');
 
   // 1. Create Admin User
-  const hashedPassword = await argon2.hash('admin123');
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@neo-gruv.com';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  
+  if (!process.env.ADMIN_PASSWORD) {
+    console.warn('⚠️ WARNING: Using default password "admin123". Please set ADMIN_PASSWORD in your .env file.');
+  }
+
+  const hashedPassword = await argon2.hash(adminPassword);
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@neo-gruv.com' },
-    update: {},
+    where: { email: adminEmail },
+    update: {
+      password: hashedPassword,
+    },
     create: {
-      email: 'admin@neo-gruv.com',
+      email: adminEmail,
       password: hashedPassword,
     },
   });
