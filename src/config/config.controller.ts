@@ -23,7 +23,10 @@ export class ConfigController {
    */
   @UseGuards(JwtAuthGuard)
   @Patch(':key')
-  updateConfig(@Param('key') key: string, @Body() body: Record<string, any>) {
+  updateConfig(
+    @Param('key') key: string,
+    @Body() body: Record<string, unknown>,
+  ) {
     return this.configService.updateConfig(key, body);
   }
 }
