@@ -8,11 +8,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'super-secret-key-change-me-in-production',
+      secretOrKey: (() => {
+        if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+          throw new Error(
+            'FATAL: JWT_SECRET environment variable is missing in production!',
+          );
+        }
+        return (
+          process.env.JWT_SECRET || 'super-secret-key-change-me-in-production'
+        );
+      })(),
     });
   }
 
-  async validate(payload: any) {
+  validate(payload: { sub: string; email: string }) {
     return { userId: payload.sub, email: payload.email };
   }
 }
