@@ -11,9 +11,10 @@ import { ConfigModule } from './config/config.module';
 @Module({
   imports: [
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]), // 100 requests per minute
-    PrismaModule, 
-    AuthModule, 
-    PortfolioModule, ConfigModule
+    PrismaModule,
+    AuthModule,
+    PortfolioModule,
+    ConfigModule,
   ],
   controllers: [AppController],
   providers: [
