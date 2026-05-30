@@ -2,7 +2,11 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { GithubApiService } from './github-api.service';
-import { GithubRepoInfo, GithubFileResponse, PortfolioConfig } from './interfaces/github.interfaces';
+import {
+  GithubRepoInfo,
+  GithubFileResponse,
+  PortfolioConfig,
+} from './interfaces/github.interfaces';
 
 @Injectable()
 export class GithubSyncService implements OnModuleInit {
@@ -10,10 +14,10 @@ export class GithubSyncService implements OnModuleInit {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly api: GithubApiService
+    private readonly api: GithubApiService,
   ) {}
 
-  async onModuleInit() {
+  onModuleInit() {
     this.logger.log('Initializing GitHub sync on application startup...');
     this.syncPortfolioRepos().catch((err: unknown) => {
       const errorMsg = err instanceof Error ? err.message : String(err);
@@ -33,29 +37,39 @@ export class GithubSyncService implements OnModuleInit {
   /**
    * Main synchronization logic.
    */
-  async syncPortfolioRepos(): Promise<{ success: boolean; synced: string[]; hidden: string[] }> {
+  async syncPortfolioRepos(): Promise<{
+    success: boolean;
+    synced: string[];
+    hidden: string[];
+  }> {
     this.logger.log(`Starting GitHub sync for user: ${this.api.username}`);
     const syncedRepos: string[] = [];
     const hiddenRepos: string[] = [];
 
     try {
       // 1. Fetch public repos
-      const reposRes = await this.api.fetchRaw(`/users/${this.api.username}/repos?per_page=100`);
+      const reposRes = await this.api.fetchRaw(
+        `/users/${this.api.username}/repos?per_page=100`,
+      );
       if (!reposRes.ok) {
         throw new Error(`Failed to fetch repositories: ${reposRes.statusText}`);
       }
 
       const repos = (await reposRes.json()) as GithubRepoInfo[];
       const publicReposList = repos.filter((r) => !r.private);
-      const githubReposSet = new Set<string>(publicReposList.map((r) => r.name));
+      const githubReposSet = new Set<string>(
+        publicReposList.map((r) => r.name),
+      );
 
       // 2. Iterate through public repos to find .portfolio.json
       for (const repo of publicReposList) {
         const repoName = repo.name;
-        
+
         // Fetch .portfolio.json
-        const fileRes = await this.api.fetchRaw(`/repos/${this.api.username}/${repoName}/contents/.portfolio.json`);
-        
+        const fileRes = await this.api.fetchRaw(
+          `/repos/${this.api.username}/${repoName}/contents/.portfolio.json`,
+        );
+
         if (fileRes.status === 404) {
           // No .portfolio.json, hide if it was previously in DB
           await this.hideProjectIfExist(repoName);
@@ -64,7 +78,9 @@ export class GithubSyncService implements OnModuleInit {
         }
 
         if (!fileRes.ok) {
-          this.logger.warn(`Failed to fetch .portfolio.json for ${repoName}: ${fileRes.statusText}`);
+          this.logger.warn(
+            `Failed to fetch .portfolio.json for ${repoName}: ${fileRes.statusText}`,
+          );
           continue;
         }
 
@@ -76,12 +92,17 @@ export class GithubSyncService implements OnModuleInit {
         }
 
         // Decode base64 contents
-        const decodedContent = Buffer.from(fileData.content, 'base64').toString('utf8');
+        const decodedContent = Buffer.from(fileData.content, 'base64').toString(
+          'utf8',
+        );
         let portfolioConfig: PortfolioConfig;
         try {
           portfolioConfig = JSON.parse(decodedContent) as PortfolioConfig;
-        } catch (e) {
-          this.logger.error(`Failed to parse JSON .portfolio.json for ${repoName}`);
+        } catch (e: unknown) {
+          const errorMsg = e instanceof Error ? e.message : String(e);
+          this.logger.error(
+            `Failed to parse JSON .portfolio.json for ${repoName}: ${errorMsg}`,
+          );
           continue;
         }
 
@@ -145,12 +166,16 @@ export class GithubSyncService implements OnModuleInit {
             where: { id: dbProj.id },
             data: { hidden: true },
           });
-          this.logger.log(`Cleaned up (hid) deleted repo: ${dbProj.githubRepo}`);
+          this.logger.log(
+            `Cleaned up (hid) deleted repo: ${dbProj.githubRepo}`,
+          );
           hiddenRepos.push(dbProj.githubRepo);
         }
       }
 
-      this.logger.log(`GitHub Sync completed successfully! Synced: ${syncedRepos.length}, Hidden: ${hiddenRepos.length}`);
+      this.logger.log(
+        `GitHub Sync completed successfully! Synced: ${syncedRepos.length}, Hidden: ${hiddenRepos.length}`,
+      );
       return { success: true, synced: syncedRepos, hidden: hiddenRepos };
     } catch (error) {
       this.logger.error('Error during GitHub sync:', error);
@@ -177,11 +202,7 @@ export class GithubSyncService implements OnModuleInit {
   async getRepos() {
     return this.prisma.project.findMany({
       where: { source: 'GITHUB', hidden: false },
-      orderBy: [
-        { featured: 'desc' },
-        { order: 'asc' },
-        { updatedAt: 'desc' },
-      ],
+      orderBy: [{ featured: 'desc' }, { order: 'asc' }, { updatedAt: 'desc' }],
     });
   }
 }
