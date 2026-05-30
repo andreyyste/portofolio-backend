@@ -25,23 +25,27 @@ model SiteConfig {
   updatedAt DateTime @updatedAt
 }
 
-model Project {
-  id          Int          @id @default(autoincrement())
-  title       String
-  brief       String
-  description String
-  link        String
-  githubLink  String?
-  imageSrc    String
-  imageAlt    String
-  tags        ProjectTag[]
+enum ProjectSource {
+  GITHUB
+  CMS
 }
 
-model ProjectTag {
-  id        Int     @id @default(autoincrement())
-  name      String
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+model Project {
+  id            Int           @id @default(autoincrement())
+  title         String
+  brief         String        // one-liner description
+  description   String        // 2-3 paragraf
+  tags          String[]      // array of strings
+  coverImage    String?       // URL gambar
+  order         Int           @default(0)
+  featured      Boolean       @default(false)
+  hasSourceCode Boolean       @default(false)
+  liveUrl       String?       // optional live demo URL
+  source        ProjectSource @default(CMS)
+  githubRepo    String?       // repo name kalau source = GITHUB
+  hidden        Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 model Experience {

@@ -31,44 +31,27 @@ export class PortfolioService {
 
   // ---- PROJECTS ----
   async getProjects() {
-    return this.prisma.project.findMany({ include: { tags: true } });
-  }
-
-  async createProject(data: CreateProjectDto) {
-    const { tags, ...rest } = data;
-    return this.prisma.project.create({
-      data: {
-        ...rest,
-        tags: tags
-          ? { create: tags.map((t: string) => ({ name: t })) }
-          : undefined,
-      },
-      include: { tags: true },
+    return this.prisma.project.findMany({
+      where: { hidden: false },
+      orderBy: [
+        { featured: 'desc' },
+        { order: 'asc' },
+        { updatedAt: 'desc' }
+      ]
     });
   }
 
-  /**
-   * Updates a project.
-   * If `tags` are provided, we use a destructive approach (delete all existing tags and recreate them).
-   * Why: This avoids complex array diffing logic for a simple many-to-many relation, ensuring the DB matches the request payload exactly.
-   */
+  async createProject(data: CreateProjectDto) {
+    return this.prisma.project.create({
+      data,
+    });
+  }
+
   async updateProject(id: number, data: UpdateProjectDto) {
     try {
-      const { tags, ...rest } = data;
-      return await this.prisma.$transaction(async (tx) => {
-        if (tags) {
-          await tx.projectTag.deleteMany({ where: { projectId: id } });
-        }
-        return await tx.project.update({
-          where: { id },
-          data: {
-            ...rest,
-            ...(tags
-              ? { tags: { create: tags.map((t: string) => ({ name: t })) } }
-              : {}),
-          },
-          include: { tags: true },
-        });
+      return await this.prisma.project.update({
+        where: { id },
+        data,
       });
     } catch (error) {
       this.handlePrismaError(error, 'Project');

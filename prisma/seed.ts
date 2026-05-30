@@ -28,7 +28,6 @@ async function main() {
   console.log('Admin user created:', admin.email);
 
   // 2. Clear existing data
-  await prisma.projectTag.deleteMany();
   await prisma.project.deleteMany();
   await prisma.experienceSkill.deleteMany();
   await prisma.experience.deleteMany();
@@ -41,37 +40,36 @@ async function main() {
       brief: 'A sensory overload experience for a conceptual fashion brand.',
       description: 'A sensory overload experience for a conceptual fashion brand. We built a fully immersive 3D web experience with WebGL and React Three Fiber to push the boundaries of digital fashion presentation.',
       tags: ['Web Design', '3D'],
-      link: '#',
-      imageSrc: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDk38x1K-p1rd39Gqw2ZsvVL0bovJzUtBUCG95EL5mJlX74UGwM-pE_87Txodc3enAWdvWEWJw-l-fohl70cXtOTWVx8uYx1fTlHsTk-Aqga76Gk-gTSgZLEwNTK7WVTsPxKjRFHM11SvEoJJTdDJc12CnYPzS_PqpF1_m0Ihw5o-ydjRO57fbEZrWs-5qYf88Em1EQEtsuA6i3Og7JtqZ_HQO9AMjn9oFFRjV8E-Frk0u0AU4no0EcMX9cA4hae6HupwlUu36k-cw',
-      imageAlt: 'Neon Void project',
+      liveUrl: '#',
+      coverImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDk38x1K-p1rd39Gqw2ZsvVL0bovJzUtBUCG95EL5mJlX74UGwM-pE_87Txodc3enAWdvWEWJw-l-fohl70cXtOTWVx8uYx1fTlHsTk-Aqga76Gk-gTSgZLEwNTK7WVTsPxKjRFHM11SvEoJJTdDJc12CnYPzS_PqpF1_m0Ihw5o-ydjRO57fbEZrWs-5qYf88Em1EQEtsuA6i3Og7JtqZ_HQO9AMjn9oFFRjV8E-Frk0u0AU4no0EcMX9cA4hae6HupwlUu36k-cw',
+      featured: true,
+      order: 1,
     },
     {
       title: 'Rust & Bone',
       brief: 'Branding and visual identity for a brutalist architecture firm.',
       description: 'Branding and visual identity for a brutalist architecture firm. The project involved creating a robust typography system, concrete-inspired color palettes, and a minimalist web presence that reflects their architectural philosophy.',
       tags: ['Branding', 'Identity'],
-      link: '#',
-      imageSrc: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC8KpkD47eIsZ1nMkk61RbsL0iaKin_PNtkG9F1PQUgY70a7C7Rnsue6orE9DAf-V5lJiKHnns7q6YWYtqY5gIN-sr0p3kX8eBIL0FfZRNPEkluvvFs8ulQ51Vc5wQy0hdEhctSsgWLtJy9wSqIAI-XYSbNCjc2rtoBPA7ewza2ViUAoysprfiTVOOkhtv-0DL_dNhMhLrom9wAAk567EE6NXuqYkgwGBD3i3XFrs4VHkGvc4qt6Zy3o2Qs-FEhHKc1NP16rPvisIY',
-      imageAlt: 'Rust & Bone project',
+      liveUrl: '#',
+      coverImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC8KpkD47eIsZ1nMkk61RbsL0iaKin_PNtkG9F1PQUgY70a7C7Rnsue6orE9DAf-V5lJiKHnns7q6YWYtqY5gIN-sr0p3kX8eBIL0FfZRNPEkluvvFs8ulQ51Vc5wQy0hdEhctSsgWLtJy9wSqIAI-XYSbNCjc2rtoBPA7ewza2ViUAoysprfiTVOOkhtv-0DL_dNhMhLrom9wAAk567EE6NXuqYkgwGBD3i3XFrs4VHkGvc4qt6Zy3o2Qs-FEhHKc1NP16rPvisIY',
+      featured: false,
+      order: 2,
     },
     {
       title: 'Vortex Lab',
       brief: 'An interactive data dashboard with real-time 3D visualizations.',
       description: 'An interactive data dashboard with real-time 3D visualizations. Designed for complex data analysis, this platform leverages web technologies to present high-density data streams in an intuitive and visually striking interface.',
       tags: ['Dashboard', 'WebGL'],
-      link: '#',
-      imageSrc: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDk38x1K-p1rd39Gqw2ZsvVL0bovJzUtBUCG95EL5mJlX74UGwM-pE_87Txodc3enAWdvWEWJw-l-fohl70cXtOTWVx8uYx1fTlHsTk-Aqga76Gk-gTSgZLEwNTK7WVTsPxKjRFHM11SvEoJJTdDJc12CnYPzS_PqpF1_m0Ihw5o-ydjRO57fbEZrWs-5qYf88Em1EQEtsuA6i3Og7JtqZ_HQO9AMjn9oFFRjV8E-Frk0u0AU4no0EcMX9cA4hae6HupwlUu36k-cw',
-      imageAlt: 'Vortex Lab project',
+      liveUrl: '#',
+      coverImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDk38x1K-p1rd39Gqw2ZsvVL0bovJzUtBUCG95EL5mJlX74UGwM-pE_87Txodc3enAWdvWEWJw-l-fohl70cXtOTWVx8uYx1fTlHsTk-Aqga76Gk-gTSgZLEwNTK7WVTsPxKjRFHM11SvEoJJTdDJc12CnYPzS_PqpF1_m0Ihw5o-ydjRO57fbEZrWs-5qYf88Em1EQEtsuA6i3Og7JtqZ_HQO9AMjn9oFFRjV8E-Frk0u0AU4no0EcMX9cA4hae6HupwlUu36k-cw',
+      featured: false,
+      order: 3,
     },
   ];
 
   for (const p of projectsData) {
-    const { tags, ...rest } = p;
     await prisma.project.create({
-      data: {
-        ...rest,
-        tags: { create: tags.map(t => ({ name: t })) }
-      }
+      data: p
     });
   }
   console.log('Projects seeded.');

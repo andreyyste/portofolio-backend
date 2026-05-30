@@ -1,4 +1,5 @@
-import { IsString, IsArray, IsOptional, IsNotEmpty } from 'class-validator';
+import { IsString, IsArray, IsOptional, IsNotEmpty, IsInt, IsBoolean, IsEnum } from 'class-validator';
+import { ProjectSource } from '@prisma/client';
 
 export class CreateProjectDto {
   @IsString()
@@ -13,26 +14,38 @@ export class CreateProjectDto {
   @IsNotEmpty()
   description!: string;
 
-  @IsString()
-  @IsNotEmpty()
-  link!: string;
-
-  @IsString()
-  @IsOptional()
-  githubLink?: string;
-
-  @IsString()
-  @IsNotEmpty()
-  imageSrc!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  imageAlt!: string;
-
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
   tags?: string[];
+
+  @IsString()
+  @IsOptional()
+  coverImage?: string;
+
+  @IsInt()
+  @IsOptional()
+  order?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  featured?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  hasSourceCode?: boolean;
+
+  @IsString()
+  @IsOptional()
+  liveUrl?: string;
+
+  @IsEnum(ProjectSource)
+  @IsOptional()
+  source?: ProjectSource;
+
+  @IsString()
+  @IsOptional()
+  githubRepo?: string;
 }
 
 export class UpdateProjectDto {
@@ -48,26 +61,38 @@ export class UpdateProjectDto {
   @IsOptional()
   description?: string;
 
-  @IsString()
-  @IsOptional()
-  link?: string;
-
-  @IsString()
-  @IsOptional()
-  githubLink?: string;
-
-  @IsString()
-  @IsOptional()
-  imageSrc?: string;
-
-  @IsString()
-  @IsOptional()
-  imageAlt?: string;
-
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
   tags?: string[];
+
+  @IsString()
+  @IsOptional()
+  coverImage?: string;
+
+  @IsInt()
+  @IsOptional()
+  order?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  featured?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  hasSourceCode?: boolean;
+
+  @IsString()
+  @IsOptional()
+  liveUrl?: string;
+
+  @IsEnum(ProjectSource)
+  @IsOptional()
+  source?: ProjectSource;
+
+  @IsString()
+  @IsOptional()
+  githubRepo?: string;
 }
 
 export class CreateExperienceDto {
