@@ -24,6 +24,9 @@ Welcome to the dedicated backend for the Neo-Brutalist portfolio. Built from the
 
 - **Robust Architecture:** Powered by **NestJS**, utilizing a scalable structure of modules, controllers, and services.
 - **Database Mastery:** Utilizes **Prisma ORM** for safe and typed database queries (SQLite for dev, PostgreSQL-ready for prod).
+- **Automated GitHub Synchronization:** Auto-syncs public repositories on startup and every 24 hours (midnight cron). Reads repository file trees, READMEs, and custom `.portfolio.json` configs to automatically populate/hide projects. Includes a manual trigger endpoint (`POST /github/sync`).
+- **Memory Cache Management:** Integrates caching for GitHub API calls to prevent rate limiting and optimize loading of file structures in the browser codebase explorer.
+- **Selective Validation Pipes:** Uses whitelisting override options (`{ whitelist: false }`) on configuration controllers to allow unstructured nested JSON configurations.
 - **Comprehensive REST API:** Full CRUD operations available for your entire portfolio ecosystem:
   - Projects
   - Experiences
