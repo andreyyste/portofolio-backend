@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from './config.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -23,6 +23,7 @@ export class ConfigController {
    */
   @UseGuards(JwtAuthGuard)
   @Patch(':key')
+  @UsePipes(new ValidationPipe({ whitelist: false }))
   updateConfig(
     @Param('key') key: string,
     @Body() body: Record<string, unknown>,

@@ -181,9 +181,9 @@ async function main() {
         brandName: 'CREATIVE.RAW',
         navLinks: [
           { label: 'About', href: '#about' },
-          { label: 'Skills', href: '#skills' },
           { label: 'Work', href: '#work' },
           { label: 'Experience', href: '#experience' },
+          { label: 'Skills', href: '#skills' },
           { label: 'Resume', href: '#resume' }
         ],
         ctaText: "LET'S TALK"
