@@ -8,7 +8,8 @@ import {
   Inject,
   Logger
 } from '@nestjs/common';
-import { GithubService } from './github.service';
+import { GithubSyncService } from './github-sync.service';
+import { GithubProxyService } from './github-proxy.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import * as cacheManager from 'cache-manager';
@@ -18,7 +19,8 @@ export class GithubController {
   private readonly logger = new Logger(GithubController.name);
 
   constructor(
-    private readonly githubService: GithubService,
+    private readonly githubSyncService: GithubSyncService,
+    private readonly githubProxyService: GithubProxyService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: cacheManager.Cache
   ) {}
 
@@ -30,7 +32,7 @@ export class GithubController {
   @Post('sync')
   async syncRepos() {
     this.logger.log('Admin triggered manual GitHub synchronization');
-    return this.githubService.syncPortfolioRepos();
+    return this.githubSyncService.syncPortfolioRepos();
   }
 
   /**
@@ -39,7 +41,7 @@ export class GithubController {
    */
   @Get('repos')
   async getRepos() {
-    return this.githubService.getRepos();
+    return this.githubSyncService.getRepos();
   }
 
   /**
@@ -57,7 +59,7 @@ export class GithubController {
       return cached;
     }
 
-    const data = await this.githubService.getRepoTree(repoName, path);
+    const data = await this.githubProxyService.getRepoTree(repoName, path);
     await this.cacheManager.set(cacheKey, data, 3600000); // 1 hour
     return data;
   }
@@ -78,7 +80,7 @@ export class GithubController {
       return cached;
     }
 
-    const data = await this.githubService.getRepoFile(repoName, path);
+    const data = await this.githubProxyService.getRepoFile(repoName, path);
     await this.cacheManager.set(cacheKey, data, 3600000); // 1 hour
     return data;
   }
@@ -95,7 +97,7 @@ export class GithubController {
       return cached;
     }
 
-    const data = await this.githubService.getRepoReadme(repoName);
+    const data = await this.githubProxyService.getRepoReadme(repoName);
     await this.cacheManager.set(cacheKey, data, 3600000); // 1 hour
     return data;
   }
@@ -113,7 +115,7 @@ export class GithubController {
       return cached;
     }
 
-    const data = await this.githubService.getRepoMetadata(repoName);
+    const data = await this.githubProxyService.getRepoMetadata(repoName);
     await this.cacheManager.set(cacheKey, data, 3600000); // 1 hour
     return data;
   }

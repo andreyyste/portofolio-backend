@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { GithubController } from './github.controller';
-import { GithubService } from './github.service';
+import { GithubApiService } from './github-api.service';
+import { GithubSyncService } from './github-sync.service';
+import { GithubProxyService } from './github-proxy.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
@@ -13,7 +15,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     }),
   ],
   controllers: [GithubController],
-  providers: [GithubService],
-  exports: [GithubService],
+  providers: [GithubApiService, GithubSyncService, GithubProxyService],
+  exports: [GithubSyncService, GithubProxyService],
 })
 export class GithubModule {}
