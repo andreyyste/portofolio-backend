@@ -14,6 +14,10 @@
 
 Welcome to the dedicated backend for the Neo-Brutalist portfolio. Built from the ground up, this API serves dynamic, easily updatable content directly to the Next.js frontend. It effectively decouples portfolio presentation from content management, giving you the flexibility to update your projects, skills, and experiences seamlessly.
 
+### Production Deployments
+* **Live Frontend Demo:** [https://nre.codes](https://nre.codes)
+* **Live API Endpoint:** [https://api.nre.codes](https://api.nre.codes)
+
 ---
 
 ## Features at a Glance
