@@ -99,4 +99,22 @@ export class GithubController {
     await this.cacheManager.set(cacheKey, data, 3600000); // 1 hour
     return data;
   }
+
+  /**
+   * Returns repository metadata (stars, forks, watchers, releases, contributors).
+   * Cached for 1 hour.
+   */
+  @Get('repos/:repoName/metadata')
+  async getMetadata(@Param('repoName') repoName: string) {
+    const cacheKey = `github:metadata:${repoName}`;
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit for repository metadata: ${cacheKey}`);
+      return cached;
+    }
+
+    const data = await this.githubService.getRepoMetadata(repoName);
+    await this.cacheManager.set(cacheKey, data, 3600000); // 1 hour
+    return data;
+  }
 }

@@ -301,4 +301,63 @@ export class GithubService implements OnModuleInit {
       content: decodedContent,
     };
   }
+
+  /**
+   * Fetches detailed repo metadata (stars, forks, subscribers/watchers, releases, contributors)
+   */
+  async getRepoMetadata(repoName: string) {
+    try {
+      // 1. Repo info (stars, forks, description, etc.)
+      const infoRes = await this.fetchGitHubApi(`/repos/${this.username}/${repoName}`);
+      if (!infoRes.ok) {
+        throw new Error(`Failed to fetch repo info: ${infoRes.statusText}`);
+      }
+      const info = await infoRes.json() as any;
+
+      // 2. Releases
+      let releases: any[] = [];
+      try {
+        const releasesRes = await this.fetchGitHubApi(`/repos/${this.username}/${repoName}/releases?per_page=5`);
+        if (releasesRes.ok) {
+          releases = await releasesRes.json() as any[];
+        }
+      } catch (e) {
+        this.logger.warn(`Failed to fetch releases for ${repoName}: ${e.message}`);
+      }
+
+      // 3. Contributors
+      let contributors: any[] = [];
+      try {
+        const contributorsRes = await this.fetchGitHubApi(`/repos/${this.username}/${repoName}/contributors?per_page=10`);
+        if (contributorsRes.ok) {
+          contributors = await contributorsRes.json() as any[];
+        }
+      } catch (e) {
+        this.logger.warn(`Failed to fetch contributors for ${repoName}: ${e.message}`);
+      }
+
+      return {
+        description: info.description || '',
+        homepage: info.homepage || '',
+        stars: info.stargazers_count || 0,
+        forks: info.forks_count || 0,
+        watchers: info.subscribers_count || info.watchers_count || 0,
+        topics: info.topics || [],
+        releases: releases.map(r => ({
+          tagName: r.tag_name,
+          name: r.name,
+          body: r.body || '',
+          publishedAt: r.published_at,
+        })),
+        contributors: contributors.map(c => ({
+          username: c.login,
+          avatarUrl: c.avatar_url,
+          contributions: c.contributions,
+        })),
+      };
+    } catch (error) {
+      this.logger.error(`Error fetching metadata for repo ${repoName}:`, error);
+      throw error;
+    }
+  }
 }
