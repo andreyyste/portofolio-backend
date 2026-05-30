@@ -41,6 +41,28 @@ Welcome to the dedicated backend for the Neo-Brutalist portfolio. Built from the
 
 ---
 
+## Detailed Feature Breakdown
+
+### 🔄 Automated GitHub Synchronization
+* **Metadata Syncing:** Fetches public repositories from the GitHub API using dynamic authorization headers. If a repository contains a `.portfolio.json` metadata file, the project is parsed and upserted into the database.
+* **Conditional Project Visibility:** If a repository doesn't have a `.portfolio.json` or has `"include": false`, the backend automatically soft-deletes the project from the dashboard view by setting `hidden: true`.
+* **API Endpoints:**
+  * `POST /github/sync` — Admin-only endpoint to trigger a manual, immediate synchronization of all repositories.
+
+### 💾 In-Memory Cache Manager
+* **Rate-Limit Prevention:** Integrates NestJS `@nestjs/cache-manager` to cache repository file structures, directories, and markdown readme contents fetched from GitHub.
+* **Cached Endpoints:**
+  * `GET /github/repos/:repoName/tree`
+  * `GET /github/repos/:repoName/file`
+  * `GET /github/repos/:repoName/readme`
+  * `GET /github/repos/:repoName/metadata`
+
+### 🛡️ CMS Configuration Pipelines
+* **Nested Object Validation:** Overrides NestJS's default global `ValidationPipe` whitelisting behaviour on the `/config/:key` controller to prevent stripping of nested JSON keys. This allows structured key-value configuration values (such as marquee arrays, social lists, and nav routes) to pass validation untouched.
+* **CRUD API Guards:** All state-modifying endpoints (`POST`, `PATCH`, `DELETE`) are guarded by Passport's `JwtStrategy` ensuring only authenticated administrators can mutate database records.
+
+---
+
 ## Tech Stack
 
 | Category | Technology |
