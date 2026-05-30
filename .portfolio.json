@@ -6,7 +6,7 @@
   "brief": "REST API for personal portfolio site",
   "description": "Fullstack portfolio backend built with NestJS, Prisma, and PostgreSQL. Features JWT authentication, throttler rate limits, cache management, and automated GitHub repository synchronization.",
   "tags": ["TypeScript", "NestJS", "PostgreSQL", "Prisma"],
-  "coverImage": null,
+  "coverImage": "https://drive.google.com/file/d/1QSnw9g50XqryFM9XOiE2noVz6Amr86Zh/view?usp=sharing",
   "hasSourceCode": true,
   "liveUrl": null
 }
