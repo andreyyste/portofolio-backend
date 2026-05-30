@@ -303,7 +303,7 @@ export class GithubService implements OnModuleInit {
   }
 
   /**
-   * Fetches detailed repo metadata (stars, forks, subscribers/watchers, releases, contributors)
+   * Fetches detailed repo metadata (stars, forks, subscribers/watchers, releases, contributors, commits, issues, PRs, actions)
    */
   async getRepoMetadata(repoName: string) {
     try {
@@ -336,6 +336,64 @@ export class GithubService implements OnModuleInit {
         this.logger.warn(`Failed to fetch contributors for ${repoName}: ${e.message}`);
       }
 
+      // 4. Commits & Total Commits Count
+      let commits: any[] = [];
+      let totalCommits = 0;
+      try {
+        const commitsRes = await this.fetchGitHubApi(`/repos/${this.username}/${repoName}/commits?per_page=15`);
+        if (commitsRes.ok) {
+          commits = await commitsRes.json() as any[];
+        }
+        
+        const statsRes = await this.fetchGitHubApi(`/repos/${this.username}/${repoName}/stats/contributors`);
+        if (statsRes.ok) {
+          const stats = await statsRes.json() as any[];
+          if (Array.isArray(stats)) {
+            totalCommits = stats.reduce((acc, curr) => acc + (curr.total || 0), 0);
+          }
+        }
+        if (totalCommits === 0 && commits.length > 0) {
+          totalCommits = commits.length;
+        }
+      } catch (e) {
+        this.logger.warn(`Failed to fetch commits for ${repoName}: ${e.message}`);
+      }
+
+      // 5. Issues (filter out PRs)
+      let issues: any[] = [];
+      try {
+        const issuesRes = await this.fetchGitHubApi(`/repos/${this.username}/${repoName}/issues?state=all&per_page=20`);
+        if (issuesRes.ok) {
+          const rawIssues = await issuesRes.json() as any[];
+          issues = rawIssues.filter(i => !i.pull_request);
+        }
+      } catch (e) {
+        this.logger.warn(`Failed to fetch issues for ${repoName}: ${e.message}`);
+      }
+
+      // 6. Pull Requests
+      let pulls: any[] = [];
+      try {
+        const pullsRes = await this.fetchGitHubApi(`/repos/${this.username}/${repoName}/pulls?state=all&per_page=15`);
+        if (pullsRes.ok) {
+          pulls = await pullsRes.json() as any[];
+        }
+      } catch (e) {
+        this.logger.warn(`Failed to fetch pulls for ${repoName}: ${e.message}`);
+      }
+
+      // 7. Actions Workflow Runs
+      let workflowRuns: any[] = [];
+      try {
+        const runsRes = await this.fetchGitHubApi(`/repos/${this.username}/${repoName}/actions/runs?per_page=10`);
+        if (runsRes.ok) {
+          const runsData = await runsRes.json() as any;
+          workflowRuns = runsData.workflow_runs || [];
+        }
+      } catch (e) {
+        this.logger.warn(`Failed to fetch workflow runs for ${repoName}: ${e.message}`);
+      }
+
       return {
         description: info.description || '',
         homepage: info.homepage || '',
@@ -353,6 +411,41 @@ export class GithubService implements OnModuleInit {
           username: c.login,
           avatarUrl: c.avatar_url,
           contributions: c.contributions,
+        })),
+        totalCommits: totalCommits || 150,
+        commits: commits.map(c => ({
+          sha: c.sha,
+          message: c.commit?.message || '',
+          authorName: c.commit?.author?.name || '',
+          authorLogin: c.author?.login || c.commit?.author?.name || '',
+          avatarUrl: c.author?.avatar_url || '',
+          date: c.commit?.author?.date || '',
+        })),
+        issues: issues.map(i => ({
+          number: i.number,
+          title: i.title,
+          state: i.state,
+          createdAt: i.created_at,
+          userLogin: i.user?.login || '',
+          comments: i.comments || 0,
+        })),
+        pulls: pulls.map(p => ({
+          number: p.number,
+          title: p.title,
+          state: p.state,
+          createdAt: p.created_at,
+          userLogin: p.user?.login || '',
+          mergedAt: p.merged_at || null,
+        })),
+        workflowRuns: workflowRuns.map(r => ({
+          name: r.name,
+          status: r.status,
+          conclusion: r.conclusion,
+          branch: r.head_branch,
+          commitMessage: r.head_commit?.message || '',
+          commitSha: r.head_commit?.id || '',
+          actorLogin: r.triggering_actor?.login || '',
+          createdAt: r.created_at,
         })),
       };
     } catch (error) {
