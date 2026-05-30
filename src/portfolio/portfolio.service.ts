@@ -19,7 +19,7 @@ export class PortfolioService {
    * @param error - The error thrown by Prisma
    * @param resourceName - Name of the resource being operated on
    */
-  private handlePrismaError(error: unknown, resourceName: string) {
+  private handlePrismaError(error: unknown, resourceName: string): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       // P2025: "An operation failed because it depends on one or more records that were required but not found."
       if (error.code === 'P2025') {
