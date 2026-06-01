@@ -11,7 +11,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     PrismaModule,
     CacheModule.register({
       ttl: 3600000, // Default TTL is 1 hour in milliseconds
-      max: 100,     // Max items in memory
+      max: 100, // Max items in memory
     }),
   ],
   controllers: [GithubController],

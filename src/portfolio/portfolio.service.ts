@@ -33,11 +33,7 @@ export class PortfolioService {
   async getProjects() {
     return this.prisma.project.findMany({
       where: { hidden: false },
-      orderBy: [
-        { featured: 'desc' },
-        { order: 'asc' },
-        { updatedAt: 'desc' }
-      ]
+      orderBy: [{ featured: 'desc' }, { order: 'asc' }, { updatedAt: 'desc' }],
     });
   }
 

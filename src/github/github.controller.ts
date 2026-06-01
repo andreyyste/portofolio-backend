@@ -1,12 +1,12 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Param, 
-  Query, 
-  UseGuards, 
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  UseGuards,
   Inject,
-  Logger
+  Logger,
 } from '@nestjs/common';
 import { GithubSyncService } from './github-sync.service';
 import { GithubProxyService } from './github-proxy.service';
@@ -21,7 +21,7 @@ export class GithubController {
   constructor(
     private readonly githubSyncService: GithubSyncService,
     private readonly githubProxyService: GithubProxyService,
-    @Inject(CACHE_MANAGER) private readonly cacheManager: cacheManager.Cache
+    @Inject(CACHE_MANAGER) private readonly cacheManager: cacheManager.Cache,
   ) {}
 
   /**
@@ -50,7 +50,7 @@ export class GithubController {
   @Get('repos/:repoName/tree')
   async getTree(
     @Param('repoName') repoName: string,
-    @Query('path') path: string = ''
+    @Query('path') path: string = '',
   ) {
     const cacheKey = `github:tree:${repoName}:${path}`;
     const cached = await this.cacheManager.get(cacheKey);
@@ -71,7 +71,7 @@ export class GithubController {
   @Get('repos/:repoName/file')
   async getFile(
     @Param('repoName') repoName: string,
-    @Query('path') path: string
+    @Query('path') path: string,
   ) {
     const cacheKey = `github:file:${repoName}:${path}`;
     const cached = await this.cacheManager.get(cacheKey);

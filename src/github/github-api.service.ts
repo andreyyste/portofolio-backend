@@ -10,7 +10,9 @@ export class GithubApiService {
     this.username = process.env.GITHUB_USERNAME || 'andreyyste';
     this.token = process.env.GITHUB_TOKEN;
     if (!this.token) {
-      this.logger.warn('GITHUB_TOKEN environment variable is not defined. API rate limits will be highly restricted.');
+      this.logger.warn(
+        'GITHUB_TOKEN environment variable is not defined. API rate limits will be highly restricted.',
+      );
     }
   }
 
@@ -18,9 +20,14 @@ export class GithubApiService {
    * Performs a raw HTTP request to the GitHub API.
    * Exposes the raw Response object to allow inspecting status codes (e.g. 404).
    */
-  async fetchRaw(endpoint: string, options: RequestInit = {}): Promise<Response> {
-    const url = endpoint.startsWith('http') ? endpoint : `https://api.github.com${endpoint}`;
-    
+  async fetchRaw(
+    endpoint: string,
+    options: RequestInit = {},
+  ): Promise<Response> {
+    const url = endpoint.startsWith('http')
+      ? endpoint
+      : `https://api.github.com${endpoint}`;
+
     const headers = new Headers(options.headers || {});
     headers.set('User-Agent', 'portfolio-backend');
     headers.set('Accept', 'application/vnd.github.v3+json');
@@ -37,12 +44,17 @@ export class GithubApiService {
       // Log rate limit warnings if we get close
       const rateLimitRemaining = response.headers.get('x-ratelimit-remaining');
       if (rateLimitRemaining && parseInt(rateLimitRemaining, 10) < 10) {
-        this.logger.warn(`GitHub API Rate Limit warning: only ${rateLimitRemaining} requests remaining.`);
+        this.logger.warn(
+          `GitHub API Rate Limit warning: only ${rateLimitRemaining} requests remaining.`,
+        );
       }
 
       return response;
     } catch (error) {
-      this.logger.error(`Network error requesting GitHub API endpoint ${endpoint}:`, error);
+      this.logger.error(
+        `Network error requesting GitHub API endpoint ${endpoint}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -53,7 +65,9 @@ export class GithubApiService {
   async fetchJson<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const response = await this.fetchRaw(endpoint, options);
     if (!response.ok) {
-      throw new Error(`GitHub API request failed for ${endpoint}: ${response.statusText} (${response.status})`);
+      throw new Error(
+        `GitHub API request failed for ${endpoint}: ${response.statusText} (${response.status})`,
+      );
     }
     return response.json() as Promise<T>;
   }
