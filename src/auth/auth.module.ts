@@ -10,14 +10,11 @@ import { JwtStrategy } from './jwt.strategy';
     PassportModule,
     JwtModule.register({
       secret: (() => {
-        if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
-          throw new Error(
-            'FATAL: JWT_SECRET environment variable is missing in production!',
-          );
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+          throw new Error('FATAL: JWT_SECRET environment variable is not set!');
         }
-        return (
-          process.env.JWT_SECRET || 'super-secret-key-change-me-in-production'
-        );
+        return secret;
       })(),
       signOptions: { expiresIn: '1d' },
     }),
