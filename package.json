@@ -1,8 +1,8 @@
 {
-  "name": "project-name",
+  "name": "portofolio-backend",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "NestJS REST API backend for personal portfolio — handles projects, experiences, skills, and GitHub sync.",
+  "author": "Andre Christian Manurung",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
