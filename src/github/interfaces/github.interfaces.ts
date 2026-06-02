@@ -190,3 +190,10 @@ export interface ProxiedRepoMetadata {
   pulls: ProxiedPullRequest[];
   workflowRuns: ProxiedWorkflowRun[];
 }
+
+export interface IGithubApiService {
+  readonly username: string;
+  fetchRaw(endpoint: string, options?: RequestInit): Promise<Response>;
+  fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T>;
+}
+

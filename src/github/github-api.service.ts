@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { IGithubApiService } from './interfaces/github.interfaces';
 
 @Injectable()
-export class GithubApiService {
+export class GithubApiService implements IGithubApiService {
   private readonly logger = new Logger(GithubApiService.name);
   public readonly username: string;
   private readonly token: string | undefined;
