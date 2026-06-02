@@ -17,6 +17,10 @@ export class GithubSyncService implements OnModuleInit {
     private readonly api: GithubApiService,
   ) {}
 
+  /**
+   * NestJS Lifecycle Hook.
+   * Automatically executes an initial synchronization run on application startup in the background.
+   */
   onModuleInit() {
     this.logger.log('Initializing GitHub sync on application startup...');
     this.syncPortfolioRepos().catch((err: unknown) => {
@@ -26,7 +30,8 @@ export class GithubSyncService implements OnModuleInit {
   }
 
   /**
-   * Cron job runs every 24 hours at midnight.
+   * Automated cron job executed every day at midnight (00:00).
+   * Ensures the database remains synchronized with GitHub public metadata modifications.
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleCronSync() {
@@ -35,7 +40,18 @@ export class GithubSyncService implements OnModuleInit {
   }
 
   /**
-   * Main synchronization logic.
+   * Main synchronization logic that maps public GitHub repositories to the portfolio database.
+   * 
+   * Process Flow:
+   * 1. Fetches all public repositories for the configured GitHub username.
+   * 2. Iterates over each repository to query for a `.portfolio.json` configuration file.
+   * 3. If `.portfolio.json` exists and contains `include: true`:
+   *    - Converts relative cover image paths to raw github user content links.
+   *    - Upserts (creates or updates) the repository details in the Project database model.
+   * 4. If the configuration does not include the project, soft-deletes (hides) it in the database.
+   * 5. Performs cleanup for any projects in the database that are no longer present on GitHub.
+   * 
+   * @returns Synchronization report containing lists of synced and hidden repository names.
    */
   async syncPortfolioRepos(): Promise<{
     success: boolean;
@@ -183,6 +199,12 @@ export class GithubSyncService implements OnModuleInit {
     }
   }
 
+  /**
+   * Helper utility to hide a project in the database if it exists.
+   * Performs soft deletion by updating the hidden flag to true.
+   * 
+   * @param repoName - Name of the repository to hide
+   */
   private async hideProjectIfExist(repoName: string) {
     const existing = await this.prisma.project.findFirst({
       where: { githubRepo: repoName, source: 'GITHUB' },
@@ -197,7 +219,10 @@ export class GithubSyncService implements OnModuleInit {
   }
 
   /**
-   * Retrieves all non-hidden Github projects.
+   * Retrieves all non-hidden Github synced projects.
+   * Used by public portfolio endpoints to fetch projects sourced from GitHub.
+   * 
+   * @returns Array of public GitHub projects ordered by featured, order, and updated timestamp.
    */
   async getRepos() {
     return this.prisma.project.findMany({
