@@ -4,6 +4,9 @@ import { GithubController } from './github.controller';
 import { GithubApiService } from './github-api.service';
 import { GithubSyncService } from './github-sync.service';
 import { GithubProxyService } from './github-proxy.service';
+import { GithubSecurityService } from './github-security.service';
+import { GithubFileProxyService } from './github-file-proxy.service';
+import { GithubMetadataProxyService } from './github-metadata-proxy.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
@@ -15,7 +18,15 @@ import { PrismaModule } from '../prisma/prisma.module';
     }),
   ],
   controllers: [GithubController],
-  providers: [GithubApiService, GithubSyncService, GithubProxyService],
+  providers: [
+    GithubApiService,
+    GithubSyncService,
+    GithubProxyService,
+    GithubSecurityService,
+    GithubFileProxyService,
+    GithubMetadataProxyService,
+  ],
   exports: [GithubSyncService, GithubProxyService],
 })
 export class GithubModule {}
+
