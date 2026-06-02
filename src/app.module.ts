@@ -9,6 +9,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from './config/config.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { GithubModule } from './github/github.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { GithubModule } from './github/github.module';
     PortfolioModule,
     ConfigModule,
     GithubModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [
