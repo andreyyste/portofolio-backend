@@ -161,22 +161,6 @@ export class CreateSkillDto {
   @IsString()
   @IsNotEmpty()
   text!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  delay!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  dur!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  rotate!: string;
-
-  @IsString()
-  @IsOptional()
-  mt?: string;
 }
 
 export class UpdateSkillDto {
@@ -191,20 +175,4 @@ export class UpdateSkillDto {
   @IsString()
   @IsOptional()
   text?: string;
-
-  @IsString()
-  @IsOptional()
-  delay?: string;
-
-  @IsString()
-  @IsOptional()
-  dur?: string;
-
-  @IsString()
-  @IsOptional()
-  rotate?: string;
-
-  @IsString()
-  @IsOptional()
-  mt?: string;
 }

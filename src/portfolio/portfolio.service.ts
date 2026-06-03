@@ -190,10 +190,7 @@ export class PortfolioService {
    */
   async createSkill(data: CreateSkillDto) {
     return this.prisma.skill.create({
-      data: {
-        ...data,
-        mt: data.mt ?? '', // Provide default as it's required in schema but optional in DTO
-      },
+      data,
     });
   }
 

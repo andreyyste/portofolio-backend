@@ -69,8 +69,4 @@ model Skill {
   name   String
   color  String
   text   String
-  delay  String
-  dur    String
-  rotate String
-  mt     String
 }
