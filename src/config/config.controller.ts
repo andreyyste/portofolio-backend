@@ -7,23 +7,35 @@ import {
   UseGuards,
   UsePipes,
   ValidationPipe,
+  Inject,
 } from '@nestjs/common';
 import { ConfigService } from './config.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import * as cacheManager from 'cache-manager';
 
 /**
  * Controller for managing global site configuration stored as key-value pairs.
  */
 @Controller('config')
 export class ConfigController {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: cacheManager.Cache,
+  ) {}
 
   /**
    * Retrieves a configuration object by its unique key.
    */
   @Get(':key')
-  getConfig(@Param('key') key: string) {
-    return this.configService.getConfig(key);
+  async getConfig(@Param('key') key: string) {
+    const cacheKey = `config:${key}`;
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.configService.getConfig(key);
+    await this.cacheManager.set(cacheKey, data, 3600000); // 1 hour
+    return data;
   }
 
   /**
@@ -33,10 +45,12 @@ export class ConfigController {
   @UseGuards(JwtAuthGuard)
   @Patch(':key')
   @UsePipes(new ValidationPipe({ whitelist: false }))
-  updateConfig(
+  async updateConfig(
     @Param('key') key: string,
     @Body() body: Record<string, unknown>,
   ) {
-    return this.configService.updateConfig(key, body);
+    const result = await this.configService.updateConfig(key, body);
+    await this.cacheManager.del(`config:${key}`);
+    return result;
   }
 }
