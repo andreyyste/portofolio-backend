@@ -77,99 +77,105 @@ export class GithubSyncService implements OnModuleInit {
         publicReposList.map((r) => r.name),
       );
 
-      // 2. Iterate through public repos to find .portfolio.json
-      for (const repo of publicReposList) {
+      // 2. Iterate through public repos to find .portfolio.json concurrently
+      await this.mapConcurrent(publicReposList, 5, async (repo) => {
         const repoName = repo.name;
-
-        // Fetch .portfolio.json
-        const fileRes = await this.api.fetchRaw(
-          `/repos/${this.api.username}/${repoName}/contents/.portfolio.json`,
-        );
-
-        if (fileRes.status === 404) {
-          // No .portfolio.json, hide if it was previously in DB
-          await this.hideProjectIfExist(repoName);
-          hiddenRepos.push(repoName);
-          continue;
-        }
-
-        if (!fileRes.ok) {
-          this.logger.warn(
-            `Failed to fetch .portfolio.json for ${repoName}: ${fileRes.statusText}`,
-          );
-          continue;
-        }
-
-        const fileData = (await fileRes.json()) as GithubFileResponse;
-        if (fileData.type !== 'file' || !fileData.content) {
-          await this.hideProjectIfExist(repoName);
-          hiddenRepos.push(repoName);
-          continue;
-        }
-
-        // Decode base64 contents
-        const decodedContent = Buffer.from(fileData.content, 'base64').toString(
-          'utf8',
-        );
-        let portfolioConfig: PortfolioConfig;
         try {
-          portfolioConfig = JSON.parse(decodedContent) as PortfolioConfig;
+          // Fetch .portfolio.json
+          const fileRes = await this.api.fetchRaw(
+            `/repos/${this.api.username}/${repoName}/contents/.portfolio.json`,
+          );
+
+          if (fileRes.status === 404) {
+            // No .portfolio.json, hide if it was previously in DB
+            await this.hideProjectIfExist(repoName);
+            hiddenRepos.push(repoName);
+            return;
+          }
+
+          if (!fileRes.ok) {
+            this.logger.warn(
+              `Failed to fetch .portfolio.json for ${repoName}: ${fileRes.statusText}`,
+            );
+            return;
+          }
+
+          const fileData = (await fileRes.json()) as GithubFileResponse;
+          if (fileData.type !== 'file' || !fileData.content) {
+            await this.hideProjectIfExist(repoName);
+            hiddenRepos.push(repoName);
+            return;
+          }
+
+          // Decode base64 contents
+          const decodedContent = Buffer.from(fileData.content, 'base64').toString(
+            'utf8',
+          );
+          let portfolioConfig: PortfolioConfig;
+          try {
+            portfolioConfig = JSON.parse(decodedContent) as PortfolioConfig;
+          } catch (e: unknown) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.logger.error(
+              `Failed to parse JSON .portfolio.json for ${repoName}: ${errorMsg}`,
+            );
+            return;
+          }
+
+          if (portfolioConfig.include === true) {
+            // Resolve coverImage URL
+            let resolvedCover = portfolioConfig.coverImage || null;
+            if (resolvedCover && !resolvedCover.startsWith('http')) {
+              resolvedCover = `https://raw.githubusercontent.com/${this.api.username}/${repoName}/main/${resolvedCover}`;
+            }
+
+            // Upsert to DB
+            const existing = await this.prisma.project.findFirst({
+              where: { githubRepo: repoName, source: 'GITHUB' },
+            });
+
+            const projectData = {
+              title: portfolioConfig.title || repoName,
+              brief: portfolioConfig.brief || '',
+              description: portfolioConfig.description || '',
+              tags: portfolioConfig.tags || [],
+              coverImage: resolvedCover,
+              order: portfolioConfig.order || 0,
+              featured: portfolioConfig.featured || false,
+              hasSourceCode: portfolioConfig.hasSourceCode || false,
+              liveUrl: portfolioConfig.liveUrl || null,
+              hidden: false,
+            };
+
+            if (existing) {
+              await this.prisma.project.update({
+                where: { id: existing.id },
+                data: projectData,
+              });
+              this.logger.log(`Updated synced repo project: ${repoName}`);
+            } else {
+              await this.prisma.project.create({
+                data: {
+                  ...projectData,
+                  source: 'GITHUB',
+                  githubRepo: repoName,
+                },
+              });
+              this.logger.log(`Created synced repo project: ${repoName}`);
+            }
+            syncedRepos.push(repoName);
+          } else {
+            // include is false or not true, hide it
+            await this.hideProjectIfExist(repoName);
+            hiddenRepos.push(repoName);
+          }
         } catch (e: unknown) {
           const errorMsg = e instanceof Error ? e.message : String(e);
           this.logger.error(
-            `Failed to parse JSON .portfolio.json for ${repoName}: ${errorMsg}`,
+            `Failed to sync repository ${repoName}: ${errorMsg}`,
           );
-          continue;
         }
-
-        if (portfolioConfig.include === true) {
-          // Resolve coverImage URL
-          let resolvedCover = portfolioConfig.coverImage || null;
-          if (resolvedCover && !resolvedCover.startsWith('http')) {
-            resolvedCover = `https://raw.githubusercontent.com/${this.api.username}/${repoName}/main/${resolvedCover}`;
-          }
-
-          // Upsert to DB
-          const existing = await this.prisma.project.findFirst({
-            where: { githubRepo: repoName, source: 'GITHUB' },
-          });
-
-          const projectData = {
-            title: portfolioConfig.title || repoName,
-            brief: portfolioConfig.brief || '',
-            description: portfolioConfig.description || '',
-            tags: portfolioConfig.tags || [],
-            coverImage: resolvedCover,
-            order: portfolioConfig.order || 0,
-            featured: portfolioConfig.featured || false,
-            hasSourceCode: portfolioConfig.hasSourceCode || false,
-            liveUrl: portfolioConfig.liveUrl || null,
-            hidden: false,
-          };
-
-          if (existing) {
-            await this.prisma.project.update({
-              where: { id: existing.id },
-              data: projectData,
-            });
-            this.logger.log(`Updated synced repo project: ${repoName}`);
-          } else {
-            await this.prisma.project.create({
-              data: {
-                ...projectData,
-                source: 'GITHUB',
-                githubRepo: repoName,
-              },
-            });
-            this.logger.log(`Created synced repo project: ${repoName}`);
-          }
-          syncedRepos.push(repoName);
-        } else {
-          // include is false or not true, hide it
-          await this.hideProjectIfExist(repoName);
-          hiddenRepos.push(repoName);
-        }
-      }
+      });
 
       // 3. Cleanup: If a project exists as GITHUB in the DB but is no longer on GitHub, set hidden: true
       const allDbGithubProjects = await this.prisma.project.findMany({
@@ -197,6 +203,30 @@ export class GithubSyncService implements OnModuleInit {
       this.logger.error('Error during GitHub sync:', error);
       throw error;
     }
+  }
+
+  /**
+   * Helper to execute promises concurrently with a concurrency limit.
+   */
+  private async mapConcurrent<T, R>(
+    items: T[],
+    limit: number,
+    fn: (item: T) => Promise<R>,
+  ): Promise<R[]> {
+    const results: Promise<R>[] = [];
+    const executing = new Set<Promise<void>>();
+    for (const item of items) {
+      const p = Promise.resolve().then(() => fn(item));
+      results.push(p);
+      executing.add(p as any);
+      const clean = p.then(() => {
+        executing.delete(p as any);
+      });
+      if (executing.size >= limit) {
+        await Promise.race(executing);
+      }
+    }
+    return Promise.all(results);
   }
 
   /**
