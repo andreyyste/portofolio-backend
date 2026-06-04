@@ -7,9 +7,12 @@ import {
   Body,
   Param,
   UseGuards,
+  Inject,
 } from '@nestjs/common';
 import { PortfolioService } from './portfolio.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import * as cacheManager from 'cache-manager';
 import {
   CreateProjectDto,
   UpdateProjectDto,
@@ -25,7 +28,10 @@ import {
  */
 @Controller('portfolio')
 export class PortfolioController {
-  constructor(private readonly portfolioService: PortfolioService) {}
+  constructor(
+    private readonly portfolioService: PortfolioService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: cacheManager.Cache,
+  ) {}
 
   // ---- PROJECTS ----
 
@@ -33,8 +39,14 @@ export class PortfolioController {
    * Retrieves all projects along with their associated tags.
    */
   @Get('projects')
-  getProjects() {
-    return this.portfolioService.getProjects();
+  async getProjects() {
+    const cacheKey = 'portfolio:projects';
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.portfolioService.getProjects();
+    await this.cacheManager.set(cacheKey, data, 3600000); // 1 hour
+    return data;
   }
 
   /**
@@ -42,8 +54,10 @@ export class PortfolioController {
    */
   @UseGuards(JwtAuthGuard)
   @Post('projects')
-  createProject(@Body() data: CreateProjectDto) {
-    return this.portfolioService.createProject(data);
+  async createProject(@Body() data: CreateProjectDto) {
+    const result = await this.portfolioService.createProject(data);
+    await this.cacheManager.del('portfolio:projects');
+    return result;
   }
 
   /**
@@ -51,8 +65,10 @@ export class PortfolioController {
    */
   @UseGuards(JwtAuthGuard)
   @Patch('projects/:id')
-  updateProject(@Param('id') id: string, @Body() data: UpdateProjectDto) {
-    return this.portfolioService.updateProject(+id, data);
+  async updateProject(@Param('id') id: string, @Body() data: UpdateProjectDto) {
+    const result = await this.portfolioService.updateProject(+id, data);
+    await this.cacheManager.del('portfolio:projects');
+    return result;
   }
 
   /**
@@ -60,8 +76,10 @@ export class PortfolioController {
    */
   @UseGuards(JwtAuthGuard)
   @Delete('projects/:id')
-  deleteProject(@Param('id') id: string) {
-    return this.portfolioService.deleteProject(+id);
+  async deleteProject(@Param('id') id: string) {
+    const result = await this.portfolioService.deleteProject(+id);
+    await this.cacheManager.del('portfolio:projects');
+    return result;
   }
 
   // ---- EXPERIENCES ----
@@ -70,8 +88,14 @@ export class PortfolioController {
    * Retrieves all work/educational experiences and their associated skills.
    */
   @Get('experiences')
-  getExperiences() {
-    return this.portfolioService.getExperiences();
+  async getExperiences() {
+    const cacheKey = 'portfolio:experiences';
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.portfolioService.getExperiences();
+    await this.cacheManager.set(cacheKey, data, 3600000); // 1 hour
+    return data;
   }
 
   /**
@@ -79,8 +103,10 @@ export class PortfolioController {
    */
   @UseGuards(JwtAuthGuard)
   @Post('experiences')
-  createExperience(@Body() data: CreateExperienceDto) {
-    return this.portfolioService.createExperience(data);
+  async createExperience(@Body() data: CreateExperienceDto) {
+    const result = await this.portfolioService.createExperience(data);
+    await this.cacheManager.del('portfolio:experiences');
+    return result;
   }
 
   /**
@@ -88,8 +114,10 @@ export class PortfolioController {
    */
   @UseGuards(JwtAuthGuard)
   @Patch('experiences/:id')
-  updateExperience(@Param('id') id: string, @Body() data: UpdateExperienceDto) {
-    return this.portfolioService.updateExperience(+id, data);
+  async updateExperience(@Param('id') id: string, @Body() data: UpdateExperienceDto) {
+    const result = await this.portfolioService.updateExperience(+id, data);
+    await this.cacheManager.del('portfolio:experiences');
+    return result;
   }
 
   /**
@@ -97,8 +125,10 @@ export class PortfolioController {
    */
   @UseGuards(JwtAuthGuard)
   @Delete('experiences/:id')
-  deleteExperience(@Param('id') id: string) {
-    return this.portfolioService.deleteExperience(+id);
+  async deleteExperience(@Param('id') id: string) {
+    const result = await this.portfolioService.deleteExperience(+id);
+    await this.cacheManager.del('portfolio:experiences');
+    return result;
   }
 
   // ---- SKILLS ----
@@ -107,8 +137,14 @@ export class PortfolioController {
    * Retrieves all skills.
    */
   @Get('skills')
-  getSkills() {
-    return this.portfolioService.getSkills();
+  async getSkills() {
+    const cacheKey = 'portfolio:skills';
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.portfolioService.getSkills();
+    await this.cacheManager.set(cacheKey, data, 3600000); // 1 hour
+    return data;
   }
 
   /**
@@ -116,8 +152,10 @@ export class PortfolioController {
    */
   @UseGuards(JwtAuthGuard)
   @Post('skills')
-  createSkill(@Body() data: CreateSkillDto) {
-    return this.portfolioService.createSkill(data);
+  async createSkill(@Body() data: CreateSkillDto) {
+    const result = await this.portfolioService.createSkill(data);
+    await this.cacheManager.del('portfolio:skills');
+    return result;
   }
 
   /**
@@ -125,8 +163,10 @@ export class PortfolioController {
    */
   @UseGuards(JwtAuthGuard)
   @Patch('skills/:id')
-  updateSkill(@Param('id') id: string, @Body() data: UpdateSkillDto) {
-    return this.portfolioService.updateSkill(+id, data);
+  async updateSkill(@Param('id') id: string, @Body() data: UpdateSkillDto) {
+    const result = await this.portfolioService.updateSkill(+id, data);
+    await this.cacheManager.del('portfolio:skills');
+    return result;
   }
 
   /**
@@ -134,7 +174,9 @@ export class PortfolioController {
    */
   @UseGuards(JwtAuthGuard)
   @Delete('skills/:id')
-  deleteSkill(@Param('id') id: string) {
-    return this.portfolioService.deleteSkill(+id);
+  async deleteSkill(@Param('id') id: string) {
+    const result = await this.portfolioService.deleteSkill(+id);
+    await this.cacheManager.del('portfolio:skills');
+    return result;
   }
 }
