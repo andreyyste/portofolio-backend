@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -13,6 +14,11 @@ import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 3600000, // 1 hour
+      max: 100, // Max items in memory
+    }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]), // 100 requests per minute
     ScheduleModule.forRoot(),
     PrismaModule,
