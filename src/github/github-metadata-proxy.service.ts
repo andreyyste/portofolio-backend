@@ -28,121 +28,56 @@ export class GithubMetadataProxyService {
    */
   async getRepoMetadata(repoName: string): Promise<ProxiedRepoMetadata> {
     try {
-      // 1. Repo info (stars, forks, description, etc.)
-      const info = await this.api.fetchJson<GithubRepoInfo>(
-        `/repos/${this.api.username}/${repoName}`,
-      );
+      const username = this.api.username;
 
-      // 2. Releases (Handles missing releases or api failure gracefully)
-      let releases: GithubRelease[] = [];
-      try {
-        const res = await this.api.fetchRaw(
-          `/repos/${this.api.username}/${repoName}/releases?per_page=5`,
-        );
-        if (res.ok) {
-          releases = (await res.json()) as GithubRelease[];
-        }
-      } catch (e: unknown) {
-        const errorMsg = e instanceof Error ? e.message : String(e);
-        this.logger.warn(
-          `Failed to fetch releases for ${repoName}: ${errorMsg}`,
-        );
-      }
-
-      // 3. Contributors
-      let contributors: GithubContributor[] = [];
-      try {
-        const res = await this.api.fetchRaw(
-          `/repos/${this.api.username}/${repoName}/contributors?per_page=10`,
-        );
-        if (res.ok) {
-          contributors = (await res.json()) as GithubContributor[];
-        }
-      } catch (e: unknown) {
-        const errorMsg = e instanceof Error ? e.message : String(e);
-        this.logger.warn(
-          `Failed to fetch contributors for ${repoName}: ${errorMsg}`,
-        );
-      }
-
-      // 4. Commits & Total Commits Count
-      let commits: GithubCommit[] = [];
-      let totalCommits = 0;
-      try {
-        const res = await this.api.fetchRaw(
-          `/repos/${this.api.username}/${repoName}/commits?per_page=15`,
-        );
-        if (res.ok) {
-          commits = (await res.json()) as GithubCommit[];
-        }
-
-        const statsRes = await this.api.fetchRaw(
-          `/repos/${this.api.username}/${repoName}/stats/contributors`,
-        );
-        if (statsRes.ok) {
-          const stats = (await statsRes.json()) as GithubContributorStats[];
-          if (Array.isArray(stats)) {
-            totalCommits = stats.reduce(
-              (acc, curr) => acc + (curr.total || 0),
-              0,
-            );
+      // Helper to fetch endpoints safely in parallel without one failing the entire batch
+      const fetchSafely = async <T>(endpoint: string, defaultValue: T): Promise<T> => {
+        try {
+          const res = await this.api.fetchRaw(endpoint);
+          if (res.ok) {
+            return (await res.json()) as T;
           }
+          this.logger.warn(`GitHub API returned non-OK status for ${endpoint}: ${res.statusText} (${res.status})`);
+        } catch (e: unknown) {
+          const errorMsg = e instanceof Error ? e.message : String(e);
+          this.logger.warn(`Failed to fetch ${endpoint}: ${errorMsg}`);
         }
-        if (totalCommits === 0 && commits.length > 0) {
-          totalCommits = commits.length;
-        }
-      } catch (e: unknown) {
-        const errorMsg = e instanceof Error ? e.message : String(e);
-        this.logger.warn(
-          `Failed to fetch commits for ${repoName}: ${errorMsg}`,
-        );
+        return defaultValue;
+      };
+
+      // Execute all API requests in parallel to optimize latency and scale response performance
+      const [
+        info,
+        releases,
+        contributors,
+        commits,
+        stats,
+        rawIssues,
+        pulls,
+        runsData,
+      ] = await Promise.all([
+        this.api.fetchJson<GithubRepoInfo>(`/repos/${username}/${repoName}`),
+        fetchSafely<GithubRelease[]>(`/repos/${username}/${repoName}/releases?per_page=5`, []),
+        fetchSafely<GithubContributor[]>(`/repos/${username}/${repoName}/contributors?per_page=10`, []),
+        fetchSafely<GithubCommit[]>(`/repos/${username}/${repoName}/commits?per_page=15`, []),
+        fetchSafely<GithubContributorStats[] | null>(`/repos/${username}/${repoName}/stats/contributors`, null),
+        fetchSafely<GithubIssue[]>(`/repos/${username}/${repoName}/issues?state=all&per_page=20`, []),
+        fetchSafely<GithubPullRequest[]>(`/repos/${username}/${repoName}/pulls?state=all&per_page=15`, []),
+        fetchSafely<GithubWorkflowRunsResponse | null>(`/repos/${username}/${repoName}/actions/runs?per_page=10`, null),
+      ]);
+
+      // Calculate total commits count from stats if available
+      let totalCommits = 0;
+      if (stats && Array.isArray(stats)) {
+        totalCommits = stats.reduce((acc, curr) => acc + (curr.total || 0), 0);
+      }
+      if (totalCommits === 0 && commits.length > 0) {
+        totalCommits = commits.length;
       }
 
-      // 5. Issues (filter out PRs)
-      let issues: GithubIssue[] = [];
-      try {
-        const res = await this.api.fetchRaw(
-          `/repos/${this.api.username}/${repoName}/issues?state=all&per_page=20`,
-        );
-        if (res.ok) {
-          const rawIssues = (await res.json()) as GithubIssue[];
-          issues = rawIssues.filter((i) => !i.pull_request);
-        }
-      } catch (e: unknown) {
-        const errorMsg = e instanceof Error ? e.message : String(e);
-        this.logger.warn(`Failed to fetch issues for ${repoName}: ${errorMsg}`);
-      }
-
-      // 6. Pull Requests
-      let pulls: GithubPullRequest[] = [];
-      try {
-        const res = await this.api.fetchRaw(
-          `/repos/${this.api.username}/${repoName}/pulls?state=all&per_page=15`,
-        );
-        if (res.ok) {
-          pulls = (await res.json()) as GithubPullRequest[];
-        }
-      } catch (e: unknown) {
-        const errorMsg = e instanceof Error ? e.message : String(e);
-        this.logger.warn(`Failed to fetch pulls for ${repoName}: ${errorMsg}`);
-      }
-
-      // 7. Actions Workflow Runs
-      let workflowRuns: GithubWorkflowRun[] = [];
-      try {
-        const res = await this.api.fetchRaw(
-          `/repos/${this.api.username}/${repoName}/actions/runs?per_page=10`,
-        );
-        if (res.ok) {
-          const runsData = (await res.json()) as GithubWorkflowRunsResponse;
-          workflowRuns = runsData.workflow_runs || [];
-        }
-      } catch (e: unknown) {
-        const errorMsg = e instanceof Error ? e.message : String(e);
-        this.logger.warn(
-          `Failed to fetch workflow runs for ${repoName}: ${errorMsg}`,
-        );
-      }
+      // Filter out Pull Requests from raw issues list
+      const issues = rawIssues.filter((i) => !i.pull_request);
+      const workflowRuns = runsData?.workflow_runs || [];
 
       return {
         description: info.description || '',
