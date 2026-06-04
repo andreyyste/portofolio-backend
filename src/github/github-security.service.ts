@@ -23,7 +23,7 @@ export class GithubSecurityService {
         decoded = decodeURIComponent(decoded);
         iterations++;
       }
-    } catch (e) {
+    } catch {
       throw new BadRequestException('Invalid URL encoding in path.');
     }
 
@@ -57,4 +57,3 @@ export class GithubSecurityService {
     return clean;
   }
 }
-

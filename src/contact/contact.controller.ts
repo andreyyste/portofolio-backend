@@ -14,7 +14,9 @@ export class SendMessageDto implements ContactDto {
 
   @IsString()
   @IsNotEmpty()
-  @Length(10, 5000, { message: 'Message must be between 10 and 5000 characters.' })
+  @Length(10, 5000, {
+    message: 'Message must be between 10 and 5000 characters.',
+  })
   message: string;
 }
 

@@ -41,7 +41,7 @@ export class GithubSyncService implements OnModuleInit {
 
   /**
    * Main synchronization logic that maps public GitHub repositories to the portfolio database.
-   * 
+   *
    * Process Flow:
    * 1. Fetches all public repositories for the configured GitHub username.
    * 2. Iterates over each repository to query for a `.portfolio.json` configuration file.
@@ -50,7 +50,7 @@ export class GithubSyncService implements OnModuleInit {
    *    - Upserts (creates or updates) the repository details in the Project database model.
    * 4. If the configuration does not include the project, soft-deletes (hides) it in the database.
    * 5. Performs cleanup for any projects in the database that are no longer present on GitHub.
-   * 
+   *
    * @returns Synchronization report containing lists of synced and hidden repository names.
    */
   async syncPortfolioRepos(): Promise<{
@@ -108,9 +108,10 @@ export class GithubSyncService implements OnModuleInit {
           }
 
           // Decode base64 contents
-          const decodedContent = Buffer.from(fileData.content, 'base64').toString(
-            'utf8',
-          );
+          const decodedContent = Buffer.from(
+            fileData.content,
+            'base64',
+          ).toString('utf8');
           let portfolioConfig: PortfolioConfig;
           try {
             portfolioConfig = JSON.parse(decodedContent) as PortfolioConfig;
@@ -214,13 +215,16 @@ export class GithubSyncService implements OnModuleInit {
     fn: (item: T) => Promise<R>,
   ): Promise<R[]> {
     const results: Promise<R>[] = [];
-    const executing = new Set<Promise<void>>();
+    const executing = new Set<Promise<unknown>>();
     for (const item of items) {
       const p = Promise.resolve().then(() => fn(item));
       results.push(p);
-      executing.add(p as any);
-      const clean = p.then(() => {
-        executing.delete(p as any);
+      executing.add(p);
+      p.then(() => {
+        executing.delete(p);
+      }).catch(() => {
+        // Prevent unhandled rejection warning, although the promise is already tracked in results
+        executing.delete(p);
       });
       if (executing.size >= limit) {
         await Promise.race(executing);
@@ -232,7 +236,7 @@ export class GithubSyncService implements OnModuleInit {
   /**
    * Helper utility to hide a project in the database if it exists.
    * Performs soft deletion by updating the hidden flag to true.
-   * 
+   *
    * @param repoName - Name of the repository to hide
    */
   private async hideProjectIfExist(repoName: string) {
@@ -251,7 +255,7 @@ export class GithubSyncService implements OnModuleInit {
   /**
    * Retrieves all non-hidden Github synced projects.
    * Used by public portfolio endpoints to fetch projects sourced from GitHub.
-   * 
+   *
    * @returns Array of public GitHub projects ordered by featured, order, and updated timestamp.
    */
   async getRepos() {

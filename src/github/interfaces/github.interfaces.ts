@@ -196,4 +196,3 @@ export interface IGithubApiService {
   fetchRaw(endpoint: string, options?: RequestInit): Promise<Response>;
   fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T>;
 }
-

@@ -36,7 +36,7 @@ export class PortfolioService {
    * 1. Featured status (featured first)
    * 2. Custom ordering index (ascending)
    * 3. Last updated timestamp (descending)
-   * 
+   *
    * @returns Array of public projects
    */
   async getProjects() {
@@ -48,7 +48,7 @@ export class PortfolioService {
 
   /**
    * Creates a new project in the portfolio database.
-   * 
+   *
    * @param data - The project transfer object containing details
    * @returns The created project object
    */
@@ -61,7 +61,7 @@ export class PortfolioService {
   /**
    * Updates an existing project metadata by its unique ID.
    * Catches database errors and throws structured NestJS NotFoundException if record not found.
-   * 
+   *
    * @param id - The numeric ID of the project
    * @param data - DTO with properties to update
    * @returns The updated project object
@@ -80,7 +80,7 @@ export class PortfolioService {
   /**
    * Permanently deletes a project from the database.
    * Catches database errors and throws structured NestJS NotFoundException if record not found.
-   * 
+   *
    * @param id - The numeric ID of the project to delete
    * @returns The deleted project representation
    */
@@ -96,7 +96,7 @@ export class PortfolioService {
   /**
    * Retrieves all professional experience records.
    * Eagerly loads all related skills linked to each experience.
-   * 
+   *
    * @returns Experience records with nested skills array
    */
   async getExperiences() {
@@ -106,7 +106,7 @@ export class PortfolioService {
   /**
    * Creates a new professional experience record.
    * Automatically creates and maps associated skills via relation tables if provided.
-   * 
+   *
    * @param data - The experience details with optional skills list
    * @returns The created experience object with mapped skills
    */
@@ -128,7 +128,7 @@ export class PortfolioService {
    * If `skills` are provided, we use a destructive approach (delete all existing skills and recreate them).
    * Why: This avoids complex array diffing logic for a simple many-to-many relation, ensuring the DB matches the request payload exactly.
    * Catches database errors and throws structured NestJS NotFoundException if record not found.
-   * 
+   *
    * @param id - The numeric ID of the experience to update
    * @param data - DTO with updated experience fields
    * @returns The updated experience with its skills
@@ -159,7 +159,7 @@ export class PortfolioService {
   /**
    * Deletes an experience record from the database.
    * Catches database errors and throws structured NestJS NotFoundException if record not found.
-   * 
+   *
    * @param id - The numeric ID of the experience to delete
    * @returns The deleted experience record
    */
@@ -174,7 +174,7 @@ export class PortfolioService {
   // ---- SKILLS ----
   /**
    * Retrieves all skills from the database.
-   * 
+   *
    * @returns Array of skills
    */
   async getSkills() {
@@ -184,7 +184,7 @@ export class PortfolioService {
   /**
    * Creates a new skill item.
    * Ensures default empty string value for `mt` if not present in the payload.
-   * 
+   *
    * @param data - DTO with skill details
    * @returns The created skill
    */
@@ -197,7 +197,7 @@ export class PortfolioService {
   /**
    * Updates an existing skill by ID.
    * Catches database errors and throws structured NestJS NotFoundException if record not found.
-   * 
+   *
    * @param id - The numeric ID of the skill
    * @param data - The update payload
    * @returns The updated skill
@@ -213,7 +213,7 @@ export class PortfolioService {
   /**
    * Deletes a skill by ID.
    * Catches database errors and throws structured NestJS NotFoundException if record not found.
-   * 
+   *
    * @param id - The numeric ID of the skill to delete
    * @returns The deleted skill representation
    */
@@ -225,4 +225,3 @@ export class PortfolioService {
     }
   }
 }
-

@@ -1,4 +1,8 @@
-import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 
 export interface ContactDto {
@@ -36,9 +40,14 @@ export class ContactService {
     }
   }
 
-  async sendContactMessage(dto: ContactDto): Promise<{ success: boolean; message: string }> {
+  async sendContactMessage(
+    dto: ContactDto,
+  ): Promise<{ success: boolean; message: string }> {
     const { name, email, message } = dto;
-    const receiver = process.env.SMTP_RECEIVER || process.env.SMTP_USER || 'admin@neo-gruv.com';
+    const receiver =
+      process.env.SMTP_RECEIVER ||
+      process.env.SMTP_USER ||
+      'admin@neo-gruv.com';
 
     const mailOptions = {
       from: `"${name}" <${email}>`, // or use SMTP_USER if the SMTP provider overrides the envelope from
@@ -72,8 +81,13 @@ ${message}
         return { success: true, message: 'Message sent successfully.' };
       } catch (err: unknown) {
         const errorMsg = err instanceof Error ? err.message : String(err);
-        this.logger.error(`Failed to send email via SMTP: ${errorMsg}`, err instanceof Error ? err.stack : undefined);
-        throw new InternalServerErrorException('Failed to send email. Please try again later.');
+        this.logger.error(
+          `Failed to send email via SMTP: ${errorMsg}`,
+          err instanceof Error ? err.stack : undefined,
+        );
+        throw new InternalServerErrorException(
+          'Failed to send email. Please try again later.',
+        );
       }
     } else {
       // Mock mode
@@ -81,7 +95,10 @@ ${message}
       this.logger.log(`[MOCK EMAIL] from: ${email}`);
       this.logger.log(`[MOCK EMAIL] subject: ${mailOptions.subject}`);
       this.logger.log(`[MOCK EMAIL] text:\n${mailOptions.text}`);
-      return { success: true, message: 'Message simulated successfully (mock mode).' };
+      return {
+        success: true,
+        message: 'Message simulated successfully (mock mode).',
+      };
     }
   }
 }

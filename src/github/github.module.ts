@@ -10,10 +10,7 @@ import { GithubMetadataProxyService } from './github-metadata-proxy.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [
-    PrismaModule,
-    CacheModule,
-  ],
+  imports: [PrismaModule, CacheModule],
   controllers: [GithubController],
   providers: [
     GithubApiService,
@@ -26,4 +23,3 @@ import { PrismaModule } from '../prisma/prisma.module';
   exports: [GithubSyncService, GithubProxyService],
 })
 export class GithubModule {}
-

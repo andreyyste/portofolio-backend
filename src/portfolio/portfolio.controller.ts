@@ -114,7 +114,10 @@ export class PortfolioController {
    */
   @UseGuards(JwtAuthGuard)
   @Patch('experiences/:id')
-  async updateExperience(@Param('id') id: string, @Body() data: UpdateExperienceDto) {
+  async updateExperience(
+    @Param('id') id: string,
+    @Body() data: UpdateExperienceDto,
+  ) {
     const result = await this.portfolioService.updateExperience(+id, data);
     await this.cacheManager.del('portfolio:experiences');
     return result;

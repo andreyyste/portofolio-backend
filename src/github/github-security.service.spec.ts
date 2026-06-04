@@ -31,24 +31,38 @@ describe('GithubSecurityService', () => {
     });
 
     it('should resolve safe relative navigation paths', () => {
-      expect(service.validatePath('src/components/../main.ts')).toBe('src/main.ts');
+      expect(service.validatePath('src/components/../main.ts')).toBe(
+        'src/main.ts',
+      );
     });
 
     it('should throw BadRequestException on simple path traversal', () => {
       expect(() => service.validatePath('..')).toThrow(BadRequestException);
       expect(() => service.validatePath('../')).toThrow(BadRequestException);
-      expect(() => service.validatePath('../../etc/passwd')).toThrow(BadRequestException);
+      expect(() => service.validatePath('../../etc/passwd')).toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException on URL encoded path traversal', () => {
-      expect(() => service.validatePath('%2e%2e%2f')).toThrow(BadRequestException);
-      expect(() => service.validatePath('foo/%2e%2e/%2e%2e/bar')).toThrow(BadRequestException);
-      expect(() => service.validatePath('%252e%252e%252f')).toThrow(BadRequestException); // double encoded
+      expect(() => service.validatePath('%2e%2e%2f')).toThrow(
+        BadRequestException,
+      );
+      expect(() => service.validatePath('foo/%2e%2e/%2e%2e/bar')).toThrow(
+        BadRequestException,
+      );
+      expect(() => service.validatePath('%252e%252e%252f')).toThrow(
+        BadRequestException,
+      ); // double encoded
     });
 
     it('should throw BadRequestException on null bytes', () => {
-      expect(() => service.validatePath('src/main.ts\0')).toThrow(BadRequestException);
-      expect(() => service.validatePath('src/%00main.ts')).toThrow(BadRequestException);
+      expect(() => service.validatePath('src/main.ts\0')).toThrow(
+        BadRequestException,
+      );
+      expect(() => service.validatePath('src/%00main.ts')).toThrow(
+        BadRequestException,
+      );
     });
   });
 });
