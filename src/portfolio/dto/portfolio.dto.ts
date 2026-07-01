@@ -124,6 +124,10 @@ export class CreateExperienceDto {
   @IsString({ each: true })
   @IsOptional()
   skills?: string[];
+
+  @IsInt()
+  @IsOptional()
+  order?: number;
 }
 
 export class UpdateExperienceDto {
@@ -147,6 +151,10 @@ export class UpdateExperienceDto {
   @IsString({ each: true })
   @IsOptional()
   skills?: string[];
+
+  @IsInt()
+  @IsOptional()
+  order?: number;
 }
 
 export class CreateSkillDto {

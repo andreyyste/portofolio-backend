@@ -17,7 +17,10 @@ export class ExperiencesService {
   }
 
   async getExperiences() {
-    return this.prisma.experience.findMany({ include: { skills: true } });
+    return this.prisma.experience.findMany({
+      include: { skills: true },
+      orderBy: { order: 'asc' },
+    });
   }
 
   async createExperience(data: CreateExperienceDto) {

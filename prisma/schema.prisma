@@ -54,6 +54,7 @@ model Experience {
   company     String
   period      String
   description String
+  order       Int               @default(0)
   skills      ExperienceSkill[]
 }
 
